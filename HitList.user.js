@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  Adds hitlist management and safe fleet removal system
-// @author       You
+// @author       LegendZer0
 // @match        https://*.astroempires.com/fleet.aspx?fleet=*
 // @match        https://*.astroempires.com/map.aspx?loc=*
 // @grant        GM_setValue
