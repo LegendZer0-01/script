@@ -239,7 +239,7 @@
 
             // Update UI
             const matchedCount = updateUnknownPlayers(fleetEntries);
-            updateProgress(progressUI, `✅ Done! <br /> Matched ${matchedCount} players`);
+            updateProgress(progressUI, `✅ Done! Matched ${matchedCount} players`);
 
             // Final logging
             console.table(fleetEntries);
