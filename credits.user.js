@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Astro Empires Debris Analyzer
+// @name         Credit Scoop Monitor
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  Monitor the hourly credit grab from all shared guilds.
