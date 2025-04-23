@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         Astro Empires Debris Analyzer
+// @name         Astro Empires Debris Analyzer Alex Version
 // @namespace    http://tampermonkey.net/
 // @version      4.0
 // @description  Robust debris analysis with cross-system support
-// @author       Your Name
+// @author       LegendZer0
 // @match        https://*.astroempires.com/credits.aspx?view=debris_info*
 // @icon         https://www.google.com/s2/favicons?domain=astroempires.com
 // @grant        GM_xmlhttpRequest
