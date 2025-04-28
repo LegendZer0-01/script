@@ -1,0 +1,155 @@
+/* Modern CSS Override */
+<style>
+:root {
+    --space-blue: #0a192f;
+    --neon-blue: #00f3ff;
+    --dark-bg: #172a45;
+    --text-light: #ccd6f6;
+    --accent-purple: #8892b0;
+}
+
+body {
+    background: var(--space-blue);
+    color: var(--text-light);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+}
+
+#background-container {
+    background: linear-gradient(160deg, #020c1b 0%, #0a192f 100%);
+}
+
+/* Header Styles */
+#top-header, #main-header {
+    background: var(--dark-bg);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    margin: 1rem auto;
+    max-width: 1200px;
+}
+
+#main-header-logo {
+    background: url('https://cdn.astroempires.com/skins/BlueNova_v2.0.21/images/main-header-logo.png') no-repeat;
+    height: 60px;
+    background-size: contain;
+}
+
+/* Navigation Menu */
+#main-header-nav_menu .menu-item {
+    padding: 0.5rem;
+}
+
+.button {
+    background: var(--neon-blue);
+    border: none;
+    border-radius: 4px;
+    color: var(--space-blue);
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,243,255,0.4);
+}
+
+/* Server Dropdown */
+#servers-dropdown {
+    background: var(--dark-bg);
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+}
+
+#servers-list {
+    background: var(--dark-bg);
+    border: 1px solid var(--neon-blue);
+    border-radius: 6px;
+    padding: 1rem;
+    min-width: 200px;
+}
+
+/* News Ticker */
+.marquee2 {
+    background: rgba(10,25,47,0.9);
+    padding: 0.8rem;
+    border-radius: 4px;
+}
+
+marquee {
+    color: var(--neon-blue);
+    font-size: 0.9em;
+}
+
+/* Main Content */
+#empire_events {
+    background: var(--dark-bg);
+    border-radius: 8px;
+    margin: 2rem auto;
+    padding: 2rem;
+    max-width: 1200px;
+}
+
+.listing {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.listing th {
+    background: var(--space-blue);
+    padding: 1rem;
+    text-align: left;
+}
+
+.listing td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--accent-purple);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #main-header-nav_menu td {
+        display: block;
+        width: 100% !important;
+        margin: 0.5rem 0;
+    }
+    
+    .listing th,
+    .listing td {
+        padding: 0.5rem;
+        font-size: 0.9em;
+    }
+    
+    .listing th:nth-child(3),
+    .listing td:nth-child(3),
+    .listing th:nth-child(4),
+    .listing td:nth-child(4) {
+        display: none;
+    }
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+#server-time {
+    color: var(--neon-blue);
+    animation: pulse 2s infinite;
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--space-blue);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neon-blue);
+    border-radius: 4px;
+}
+</style>
