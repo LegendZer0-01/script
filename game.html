@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accuracy Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        #game-container {
+            width: 600px;
+            height: 400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #target {
+            width: 50px;
+            height: 50px;
+            background-color: #ff5252;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        #score-display {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        
+        #timer-display {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #666;
+        }
+        
+        #start-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        #start-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Click the Target!</h1>
+    <p>Click as many targets as you can in 30 seconds!</p>
+    
+    <div id="score-display">Score: 0</div>
+    <div id="timer-display">Time left: 30s</div>
+    <button id="start-button">Start Game</button>
+    
+    <div id="game-container">
+        <div id="target"></div>
+    </div>
+
+    <script>
+        const target = document.getElementById('target');
+        const gameContainer = document.getElementById('game-container');
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const startButton = document.getElementById('start-button');
+        
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let timerInterval;
+        let isGameRunning = false;
+        
+        // Move target to random position
+        function moveTarget() {
+            const containerWidth = gameContainer.clientWidth - 50;
+            const containerHeight = gameContainer.clientHeight - 50;
+            
+            const randomX = Math.floor(Math.random() * containerWidth);
+            const randomY = Math.floor(Math.random() * containerHeight);
+            
+            target.style.left = randomX + 'px';
+            target.style.top = randomY + 'px';
+        }
+        
+        // Start the game
+        function startGame() {
+            if (isGameRunning) return;
+            
+            isGameRunning = true;
+            score = 0;
+            timeLeft = 30;
+            scoreDisplay.textContent = `Score: ${score}`;
+            timerDisplay.textContent = `Time left: ${timeLeft}s`;
+            
+            // Show and move target
+            target.style.display = 'block';
+            moveTarget();
+            
+            // Start game loop
+            gameInterval = setInterval(moveTarget, 1000);
+            
+            // Start timer
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time left: ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // End the game
+        function endGame() {
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            target.style.display = 'none';
+            alert(`Game over! Your score: ${score}`);
+        }
+        
+        // Event listeners
+        startButton.addEventListener('click', startGame);
+        
+        target.addEventListener('click', () => {
+            if (!isGameRunning) return;
+            
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+            moveTarget();
+            
+            // Make target move faster as score increases
+            clearInterval(gameInterval);
+            const speed = Math.max(200, 1000 - (score * 20));
+            gameInterval = setInterval(moveTarget, speed);
+        });
+        
+        // Hide target initially
+        target.style.display = 'none';
+    </script>
+</body>
+</html>
