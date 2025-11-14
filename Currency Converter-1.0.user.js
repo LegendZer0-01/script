@@ -1,22 +1,24 @@
 // ==UserScript==
 // @name         Universal Currency Converter
 // @namespace    http://tampermonkey.net/
-// @version      2.3
-// @description  Converts USD prices to Norwegian Krone on hover - shows icon on all sites
+// @version      2.4
+// @description  Converts USD prices to Norwegian Krone on hover - shows cart icon on all sites
 // @author       LegendZer0
 // @match        https://*.astroempires.com/*
 // @match        https://*.amazon.com/*
 // @match        https://*.ebay.com/*
-// @match        https://*walmart.com/*
-// @match        https://*bestbuy.com/*
-// @match        https://*newegg.com/*
-// @match        https://*aliexpress.com/*
-// @match        https://*etsy.com/*
-// @match        https://*steampowered.com/*
-// @match        https://*amazon.co.uk/*
-// @match        https://*ebay.co.uk/*
-// @match        https://*amazon.de/*
-// @match        https://*ebay.de/*
+// @match        https://*.walmart.com/*
+// @match        https://*.bestbuy.com/*
+// @match        https://*.newegg.com/*
+// @match        https://*.aliexpress.com/*
+// @match        https://*.etsy.com/*
+// @match        https://*.steampowered.com/*
+// @match        https://*.temu.com/*
+// @match        https://*.wish.com/*
+// @match        https://*.amazon.co.uk/*
+// @match        https://*.ebay.co.uk/*
+// @match        https://*.amazon.de/*
+// @match        https://*.ebay.de/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_xmlhttpRequest
@@ -74,7 +76,7 @@
     // Function to find price elements on e-commerce sites
     function findPriceElements() {
         const priceSelectors = [
-            // Amazon specific - target parent containers that contain price elements
+            // Amazon specific
             '.a-price[data-a-size="xl"]',
             '.a-price.aok-align-center',
             '.a-price',
@@ -109,10 +111,29 @@
             '.game_purchase_price',
             '.discount_final_price',
 
+            // Temu
+            '[data-price]',
+            '.price',
+            '.TmV2UHJpY2U', // Temu's encoded class names
+            '.JIIgO', // Another common Temu price class
+            '[class*="price"]',
+            '[class*="Price"]',
+
+            // Wish
+            '.ProductPrice__value',
+            '.ProductPrice__convertedValue',
+            '.price-container',
+            '.selling-price',
+            '[data-testid="product-price"]',
+
             // General selectors
             '[class*="price"]',
             '.price',
-            '.Price'
+            '.Price',
+            '.cost',
+            '.amount',
+            '.currency',
+            '[data-price]'
         ];
 
         const elements = new Set();
@@ -154,6 +175,14 @@
             return true;
         }
 
+        // For Temu and Wish, be more aggressive with detection
+        if (window.location.hostname.includes('temu.com') ||
+            window.location.hostname.includes('wish.com')) {
+            if (text.match(/\d/)) {
+                return true;
+            }
+        }
+
         // Look for price patterns in text
         const pricePatterns = [
             /\$\d+\.?\d*/i,                    // $19.99
@@ -166,7 +195,7 @@
         return pricePatterns.some(pattern => pattern.test(text));
     }
 
-    // Improved function to extract price from Amazon's complex structure
+    // Improved function to extract price from complex structures
     function extractPrice(element) {
         // Special handling for Amazon's split price elements
         if (element.classList.contains('a-price') || element.querySelector('.a-price-whole')) {
@@ -181,6 +210,14 @@
                 if (price > 0.01 && price < 1000000) {
                     return price;
                 }
+            }
+        }
+
+        // Special handling for Temu - they often use data attributes
+        if (element.hasAttribute('data-price')) {
+            const price = parseFloat(element.getAttribute('data-price'));
+            if (price > 0.01 && price < 1000000) {
+                return price;
             }
         }
 
@@ -219,7 +256,7 @@
         });
     }
 
-    // Function to add currency icon next to price elements
+    // Function to add cart icon next to price elements
     function addCurrencyIcons() {
         const priceElements = findPriceElements();
         console.log(`Found ${priceElements.length} potential price elements`);
@@ -235,18 +272,18 @@
                 element.setAttribute('data-currency-converter', 'true');
                 element.setAttribute('data-original-price', price);
 
-                // Add money bag icon next to the price
+                // Add shopping cart icon next to the price
                 addIconToElement(element, price);
             }
         });
     }
 
-    // Function to add money bag icon to a price element
+    // Function to add shopping cart icon to a price element
     function addIconToElement(element, price) {
         // Create the icon
         const icon = document.createElement('span');
         icon.className = 'currency-converter-icon';
-        icon.innerHTML = '🛒';
+        icon.innerHTML = '🛒'; // Shopping cart emoji
         icon.style.cssText = `
             margin-left: 8px;
             cursor: pointer;
@@ -254,7 +291,8 @@
             font-size: 1.2em;
             vertical-align: middle;
             display: inline-block;
-            transition: transform 0.2s ease;
+            transition: all 0.2s ease;
+            opacity: 0.7;
         `;
 
         // Add hover events to the icon
@@ -269,9 +307,10 @@
 
                 // Visual feedback
                 this.style.transform = 'scale(1.2)';
+                this.style.opacity = '1';
                 if (element.style) {
-                    element.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
-                    element.style.outline = '1px dashed #4CAF50';
+                    element.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
+                    element.style.outline = '1px dashed #2196F3';
                     element.style.borderRadius = '3px';
                 }
             }, 100);
@@ -281,6 +320,7 @@
             e.stopPropagation();
             clearTimeout(hoverTimeout);
             this.style.transform = 'scale(1)';
+            this.style.opacity = '0.7';
             if (element.style) {
                 element.style.backgroundColor = '';
                 element.style.outline = '';
@@ -292,31 +332,45 @@
         // Add click event to toggle conversion display
         icon.addEventListener('click', async function(e) {
             e.stopPropagation();
+            e.preventDefault();
+
             const rate = await getConversionRate();
             const nokAmount = convertToNOK(price, rate);
 
+            // Remove any existing conversion display
+            const existingDisplay = element.querySelector('.conversion-display');
+            if (existingDisplay) {
+                existingDisplay.remove();
+            }
+
             // Temporary show conversion next to price
             const conversionDisplay = document.createElement('span');
+            conversionDisplay.className = 'conversion-display';
             conversionDisplay.textContent = ` (${nokAmount})`;
             conversionDisplay.style.cssText = `
-                color: #4CAF50;
+                color: #2196F3;
                 font-size: 0.9em;
                 margin-left: 4px;
+                font-weight: normal;
             `;
 
             element.appendChild(conversionDisplay);
 
-            // Remove after 3 seconds
+            // Remove after 5 seconds
             setTimeout(() => {
                 if (conversionDisplay.parentElement) {
                     conversionDisplay.remove();
                 }
-            }, 3000);
+            }, 5000);
         });
 
-        // Insert the icon after the price element or as the last child
+        // Insert the icon after the price element
         if (element.parentElement) {
-            element.parentElement.insertBefore(icon, element.nextSibling);
+            // Try to insert after the element, but before any existing icons
+            const existingIcon = element.nextElementSibling?.classList?.contains('currency-converter-icon');
+            if (!existingIcon) {
+                element.parentElement.insertBefore(icon, element.nextSibling);
+            }
         } else {
             element.appendChild(icon);
         }
@@ -331,7 +385,7 @@
         tooltip.textContent = text;
         tooltip.style.cssText = `
             position: fixed;
-            background: #333;
+            background: #2196F3;
             color: white;
             padding: 8px 12px;
             border-radius: 4px;
@@ -340,6 +394,7 @@
             pointer-events: none;
             white-space: nowrap;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
         `;
 
         document.body.appendChild(tooltip);
@@ -361,7 +416,7 @@
         }
     }
 
-    // ASTROEMPIRES-SPECIFIC FUNCTIONALITY (unchanged)
+    // ASTROEMPIRES-SPECIFIC FUNCTIONALITY (updated to use cart)
     function addAstroempiresButtons() {
         const playerCells = document.querySelectorAll('table.layout.listing.btnlisting.tbllisting1 td:nth-child(2)');
 
@@ -370,7 +425,7 @@
 
             const btn = document.createElement('a');
             btn.className = 'currency-btn';
-            btn.innerHTML = '🛒';
+            btn.innerHTML = '🛒'; // Shopping cart emoji
             btn.style.cssText = `
                 margin-left: 8px;
                 cursor: pointer;
@@ -378,6 +433,8 @@
                 font-size: 1.2em;
                 vertical-align: middle;
                 display: inline-block;
+                transition: all 0.2s ease;
+                opacity: 0.7;
             `;
 
             btn.addEventListener('mouseenter', async function(e) {
@@ -386,6 +443,8 @@
                     const rate = await getConversionRate();
                     const nokAmount = convertToNOK(number, rate);
                     this.title = `$${number.toLocaleString()} = ${nokAmount}`;
+                    this.style.opacity = '1';
+                    this.style.transform = 'scale(1.2)';
                 } else {
                     this.title = 'No number found to convert';
                 }
@@ -393,6 +452,8 @@
 
             btn.addEventListener('mouseleave', function() {
                 this.removeAttribute('title');
+                this.style.opacity = '0.7';
+                this.style.transform = 'scale(1)';
             });
 
             cell.appendChild(btn);
@@ -444,13 +505,15 @@
     const style = document.createElement('style');
     style.textContent = `
         .currency-btn, .currency-converter-icon {
-            color: #4CAF50 !important;
-            transition: transform 0.2s ease;
+            color: #2196F3 !important;
+            transition: all 0.2s ease !important;
             cursor: pointer !important;
+            opacity: 0.7;
         }
 
         .currency-btn:hover, .currency-converter-icon:hover {
             transform: scale(1.2);
+            opacity: 1;
             text-decoration: none;
         }
 
@@ -462,13 +525,18 @@
             font-family: Arial, sans-serif !important;
         }
 
-        /* Ensure the icon doesn't break layouts */
-        .currency-converter-icon {
-            opacity: 0.8;
+        .conversion-display {
+            animation: fadeIn 0.3s ease;
         }
 
-        .currency-converter-icon:hover {
-            opacity: 1;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Ensure the icon doesn't break layouts */
+        .currency-converter-icon {
+            vertical-align: middle;
         }
     `;
     document.head.appendChild(style);
@@ -485,7 +553,7 @@
             setInterval(addAstroempiresButtons, 2000);
         }
     } else {
-        console.log('Running universal currency converter with icons for:', window.location.hostname);
+        console.log('Running universal currency converter with cart icons for:', window.location.hostname);
 
         // More aggressive initialization for e-commerce sites
         const initEcommerce = () => {
